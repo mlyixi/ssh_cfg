@@ -1,8 +1,10 @@
 use ssh_cfg::{SshConfigParser, SshOptionKey};
-use tokio::runtime;
+use std::path::Path;
 
-async fn parse_ssh_config() -> Result<(), Box<dyn std::error::Error>> {
-    let ssh_config = SshConfigParser::parse_home().await?;
+fn parse_ssh_config() -> Result<(), Box<dyn std::error::Error>> {
+    let config_path = shellexpand::tilde("~/.ssh/config");
+    let config_path = Path::new(config_path.as_ref());
+    let ssh_config = SshConfigParser::parse(config_path)?;
 
     // Print first host config
     if let Some((first_host, host_config)) = ssh_config.iter().next() {
@@ -22,6 +24,5 @@ async fn parse_ssh_config() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let rt = runtime::Builder::new_current_thread().build()?;
-    rt.block_on(parse_ssh_config())
+    parse_ssh_config()
 }

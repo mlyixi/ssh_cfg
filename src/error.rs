@@ -41,12 +41,6 @@ impl fmt::Display for Error {
     }
 }
 
-impl From<plain_path::HomeDirNotFound> for Error {
-    fn from(_: plain_path::HomeDirNotFound) -> Self {
-        Self::HomeDirNotFound
-    }
-}
-
 impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {

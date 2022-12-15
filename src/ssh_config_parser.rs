@@ -1,6 +1,4 @@
-use std::path::Path;
-
-use plain_path::PlainPathExt;
+use std::{fs, path::Path};
 
 use crate::{ConfigError, Error, SshConfig, SshHostConfig, SshOptionKey};
 
@@ -10,33 +8,18 @@ pub struct SshConfigParser;
 // See https://github.com/substack/libssh/blob/master/src/config.c
 impl SshConfigParser {
     /// Returns the parsed SSH configuration.
-    pub async fn parse(path: &Path) -> Result<SshConfig, Error> {
-        let path = path.plain()?;
-
-        let contents = Self::ssh_config_contents(&path).await?;
+    pub fn parse(path: &Path) -> Result<SshConfig, Error> {
+        let contents = Self::ssh_config_contents(&path)?;
         let ssh_config = Self::parse_config_contents(&contents)?;
 
         Ok(ssh_config)
     }
 
-    /// Parses `~/.ssh/config`.
-    pub async fn parse_home() -> Result<SshConfig, Error> {
-        if let Some(mut ssh_path) = dirs::home_dir() {
-            ssh_path.push(".ssh");
-            ssh_path.push("config");
-            Self::parse(&ssh_path).await
-        } else {
-            Err(Error::HomeDirNotFound)
-        }
-    }
-
-    async fn ssh_config_contents(path: &Path) -> Result<String, Error> {
-        async_fs::read_to_string(path)
-            .await
-            .map_err(|error| Error::SshConfigRead {
-                path: path.to_path_buf(),
-                error,
-            })
+    fn ssh_config_contents(path: &Path) -> Result<String, Error> {
+        fs::read_to_string(path).map_err(|error| Error::SshConfigRead {
+            path: path.to_path_buf(),
+            error,
+        })
     }
 
     /// Parses SSH configuration in memory.
